@@ -47,15 +47,14 @@ class ModelGraph(object):
         # encode the input instance
         # encoder.graph_hidden [batch, node_num, vsize]
         # encoder.graph_cell [batch, node_num, vsize]
-        with tf.variable_scope('bidir_encoder'):
+        with tf.variable_scope('encoder'):
             self.encoder = graph_encoder_utils.GraphEncoder(
                     word_vocab = word_vocab,
                     edge_label_vocab = Edgelabel_vocab,
                     char_vocab = char_vocab,
                     is_training = is_training, options = options)
 
-            variable_scope.get_variable_scope().reuse_variables()
-
+        with tf.variable_scope('rev_encoder'):
             self.encoder_rev = graph_encoder_utils.GraphEncoder(
                     word_vocab = word_vocab,
                     edge_label_vocab = Edgelabel_vocab,
@@ -111,22 +110,19 @@ class ModelGraph(object):
         b_linear = tf.get_variable("b_linear",
                 [options.class_num], dtype=tf.float32)
         # [batch, class_num]
-        prediction = tf.nn.softmax(tf.matmul(entity_states, w_linear) + b_linear)
-        prediction = _clip_and_normalize(prediction, 1.0e-6)
+        logits = tf.matmul(entity_states, w_linear) + b_linear
 
         ## calculating accuracy
         self.answers = tf.placeholder(tf.int32, [None,])
         self.accu = tf.reduce_sum(
                 tf.cast(
-                    tf.equal(tf.argmax(prediction,axis=-1,output_type=tf.int32),self.answers),
+                    tf.equal(tf.argmax(logits,axis=-1,output_type=tf.int32),self.answers),
                     dtype=tf.float32))
 
         ## calculating loss
-        # xent: [batch]
-        xent = -tf.reduce_sum(
-                tf.one_hot(self.answers,options.class_num)*tf.log(prediction),
-                axis=-1)
-        self.loss = tf.reduce_mean(xent)
+        self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+            logits=logits,
+            labels=tf.one_hot(self.answers,options.class_num)))
 
         if mode != 'train':
             print('Return from here, just evaluate')

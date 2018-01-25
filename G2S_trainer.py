@@ -15,6 +15,7 @@ from G2S_model_graph import ModelGraph
 FLAGS = None
 import tensorflow as tf
 tf.logging.set_verbosity(tf.logging.ERROR) # DEBUG, INFO, WARN, ERROR, and FATAL
+#from tensorflow.python import debug as tf_debug
 
 from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu, sentence_bleu
 cc = SmoothingFunction()
@@ -71,6 +72,11 @@ def evaluate(sess, valid_graph, devDataStream, devDataStreamRev, options=None, s
         dev_total += cur_batch.batch_size
 
     return {'dev_loss':dev_loss, 'dev_accu':1.0*dev_right/dev_total, 'dev_right':dev_right, 'dev_total':dev_total, }
+
+
+def shuffle_both(data, dataRev):
+    np.random.shuffle(data.index_array)
+    dataRev.index_array = data.index_array
 
 
 def main(_):
@@ -195,6 +201,8 @@ def main(_):
         saver = tf.train.Saver(vars_)
 
         sess = tf.Session()
+        #sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+        #sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
         sess.run(initializer)
         if has_pretrained_model:
             print("Restoring model from " + best_path)
@@ -224,6 +232,10 @@ def main(_):
             assert np.array_equal(cur_batch.y, cur_batch_rev.y)
             _, loss_value, _ = train_graph.execute(sess, cur_batch, cur_batch_rev, FLAGS, is_train=True)
             total_loss += loss_value
+
+            if trainDataStream.cur_pointer >= trainDataStream.num_batch:
+                assert trainDataStreamRev.cur_pointer >= trainDataStreamRev.num_batch
+                shuffle_both(trainDataStream, trainDataStreamRev)
 
             if step % 100==0:
                 print('{} '.format(step), end="")

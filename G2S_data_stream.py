@@ -64,7 +64,9 @@ def read_nary_file(inpath, word_format, is_rev):
             all_in_label.append(in_label)
             entity_indices = []
             for entity in inst['entities']:
-                entity_indices.append([i+1 for i in entity['indices']])
+                ei = [i if not is_rev else N - 1 - i for i in entity['indices']]
+                ei = [i+1 for i in ei]
+                entity_indices.append(ei)
             assert len(entity_indices) == 3
             all_entity_indices.append(entity_indices)
             all_y.append(relation_set[inst['relationLabel'].strip()])

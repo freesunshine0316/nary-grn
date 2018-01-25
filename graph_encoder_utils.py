@@ -143,39 +143,39 @@ class GraphEncoder(object):
                 passage_node_representation = match_utils.multi_highway_layer(passage_node_representation, options.node_dim,
                                                                               options.highway_layer_num)
 
-        with tf.variable_scope('graph_encoder'):
-            # =========== in neighbor
-            passage_in_neighbor_edge_representations = tf.nn.embedding_lookup(self.edge_embedding,
-                    self.passage_in_neighbor_edges)
-            # [batch_size, passage_len, passage_neighbors_size_max, edge_dim]
-            passage_in_neighbor_node_representations = collect_neighbor_node_representations(
-                                                    passage_node_representation, self.passage_in_neighbor_indices)
-            # [batch_size, passage_len, passage_neighbors_size_max, node_dim]
+        # =========== in neighbor
+        passage_in_neighbor_edge_representations = tf.nn.embedding_lookup(self.edge_embedding,
+                self.passage_in_neighbor_edges)
+        # [batch_size, passage_len, passage_neighbors_size_max, edge_dim]
+        passage_in_neighbor_node_representations = collect_neighbor_node_representations(
+                                                passage_node_representation, self.passage_in_neighbor_indices)
+        # [batch_size, passage_len, passage_neighbors_size_max, node_dim]
 
-            passage_in_neighbor_representations = tf.concat( \
-                    [passage_in_neighbor_node_representations, passage_in_neighbor_edge_representations], 3)
-            passage_in_neighbor_representations = tf.multiply(passage_in_neighbor_representations,
-                    tf.expand_dims(self.passage_in_neighbor_mask, axis=-1))
-            passage_in_neighbor_representations = tf.reduce_sum(passage_in_neighbor_representations, axis=2)
-            # [batch_size, passage_len, node_dim + edge_dim]
+        passage_in_neighbor_representations = tf.concat( \
+                [passage_in_neighbor_node_representations, passage_in_neighbor_edge_representations], 3)
+        passage_in_neighbor_representations = tf.multiply(passage_in_neighbor_representations,
+                tf.expand_dims(self.passage_in_neighbor_mask, axis=-1))
+        passage_in_neighbor_representations = tf.reduce_sum(passage_in_neighbor_representations, axis=2)
+        # [batch_size, passage_len, node_dim + edge_dim]
 
 
-            # =====compress neighbor_representations
-            compress_vector_dim = options.neighbor_vector_dim
-            w_compress = tf.get_variable("w_compress", [options.node_dim+ edge_dim, compress_vector_dim], dtype=tf.float32)
-            b_compress = tf.get_variable("b_compress", [compress_vector_dim], dtype=tf.float32)
+        # =====compress neighbor_representations
+        compress_vector_dim = options.neighbor_vector_dim
+        w_compress = tf.get_variable("w_compress", [options.node_dim+ edge_dim, compress_vector_dim], dtype=tf.float32)
+        b_compress = tf.get_variable("b_compress", [compress_vector_dim], dtype=tf.float32)
 
-            passage_in_neighbor_representations = tf.reshape(passage_in_neighbor_representations,
-                    [-1, options.node_dim + edge_dim])
-            passage_in_neighbor_representations = tf.matmul(passage_in_neighbor_representations, w_compress) \
-                    + b_compress
-            passage_in_neighbor_representations = tf.tanh(passage_in_neighbor_representations)
+        passage_in_neighbor_representations = tf.reshape(passage_in_neighbor_representations,
+                [-1, options.node_dim + edge_dim])
+        passage_in_neighbor_representations = tf.matmul(passage_in_neighbor_representations, w_compress) \
+                + b_compress
+        passage_in_neighbor_representations = tf.tanh(passage_in_neighbor_representations)
 
-            passage_in_neighbor_representations = tf.reshape(passage_in_neighbor_representations,
-                    [batch_size, passage_nodes_size_max, compress_vector_dim])
-            passage_in_neighbor_representations = tf.multiply(passage_in_neighbor_representations,
-                    tf.expand_dims(self.passage_nodes_mask, axis=-1))
+        passage_in_neighbor_representations = tf.reshape(passage_in_neighbor_representations,
+                [batch_size, passage_nodes_size_max, compress_vector_dim])
+        passage_in_neighbor_representations = tf.multiply(passage_in_neighbor_representations,
+                tf.expand_dims(self.passage_nodes_mask, axis=-1))
 
+        with tf.variable_scope('gated_operations'):
             w_in_ingate = tf.get_variable("w_in_ingate",
                     [compress_vector_dim, options.neighbor_vector_dim], dtype=tf.float32)
             u_in_ingate = tf.get_variable("u_in_ingate",
