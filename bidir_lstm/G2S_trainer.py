@@ -15,7 +15,7 @@ from G2S_model_graph import ModelGraph
 FLAGS = None
 import tensorflow as tf
 tf.logging.set_verbosity(tf.logging.ERROR) # DEBUG, INFO, WARN, ERROR, and FATAL
-#from tensorflow.python import debug as tf_debug
+from tensorflow.python import debug as tf_debug
 
 from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu, sentence_bleu
 cc = SmoothingFunction()
@@ -66,7 +66,7 @@ def evaluate(sess, valid_graph, devDataStream, devDataStreamRev, options=None, s
     for batch_index in xrange(devDataStream.get_num_batch()): # for each batch
         cur_batch = devDataStream.get_batch(batch_index)
         cur_batch_rev = devDataStreamRev.get_batch(batch_index)
-        accu_value, loss_value = valid_graph.execute(sess, cur_batch, cur_batch_rev, options, is_train=False)
+        accu_value, loss_value, _ = valid_graph.execute(sess, cur_batch, cur_batch_rev, options, is_train=False)
         dev_loss += loss_value
         dev_right += accu_value
         dev_total += cur_batch.batch_size
@@ -99,20 +99,20 @@ def main(_):
 
     print('Loading train set.')
     if FLAGS.infile_format == 'fof':
-        trainset = G2S_data_stream.read_nary_from_fof(FLAGS.train_path, FLAGS.word_format, is_rev=False)
-        trainset_rev = G2S_data_stream.read_nary_from_fof(FLAGS.train_path, FLAGS.word_format, is_rev=True)
+        trainset = G2S_data_stream.read_nary_from_fof(FLAGS.train_path, FLAGS, is_rev=False)
+        trainset_rev = G2S_data_stream.read_nary_from_fof(FLAGS.train_path, FLAGS, is_rev=True)
     else:
-        trainset = G2S_data_stream.read_nary_file(FLAGS.train_path, FLAGS.word_format, is_rev=False)
-        trainset_rev = G2S_data_stream.read_nary_file(FLAGS.train_path, FLAGS.word_format, is_rev=True)
+        trainset = G2S_data_stream.read_nary_file(FLAGS.train_path, FLAGS, is_rev=False)
+        trainset_rev = G2S_data_stream.read_nary_file(FLAGS.train_path, FLAGS, is_rev=True)
     print('Number of training samples: {}/{}'.format(len(trainset),len(trainset_rev)))
 
     print('Loading dev set.')
     if FLAGS.infile_format == 'fof':
-        testset = G2S_data_stream.read_nary_from_fof(FLAGS.test_path, FLAGS.word_format, is_rev=False)
-        testset_rev = G2S_data_stream.read_nary_from_fof(FLAGS.test_path, FLAGS.word_format, is_rev=True)
+        testset = G2S_data_stream.read_nary_from_fof(FLAGS.test_path, FLAGS, is_rev=False)
+        testset_rev = G2S_data_stream.read_nary_from_fof(FLAGS.test_path, FLAGS, is_rev=True)
     else:
-        testset = G2S_data_stream.read_nary_file(FLAGS.test_path, FLAGS.word_format, is_rev=False)
-        testset_rev = G2S_data_stream.read_nary_file(FLAGS.test_path, FLAGS.word_format, is_rev=True)
+        testset = G2S_data_stream.read_nary_file(FLAGS.test_path, FLAGS, is_rev=False)
+        testset_rev = G2S_data_stream.read_nary_file(FLAGS.test_path, FLAGS, is_rev=True)
     print('Number of test samples: {}/{}'.format(len(testset),len(testset_rev)))
 
     word_vocab = None

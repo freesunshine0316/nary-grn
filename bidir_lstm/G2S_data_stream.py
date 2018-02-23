@@ -14,7 +14,7 @@ def read_text_file(text_file):
             lines.append(line.strip())
     return lines
 
-def read_nary_file(inpath, word_format, is_rev):
+def read_nary_file(inpath, options, is_rev):
     all_words = []
     all_lemmas = []
     all_poses = []
@@ -23,12 +23,19 @@ def read_nary_file(inpath, word_format, is_rev):
     all_in_label = []
     all_entity_indices = [] # [batch, 3, entity_size]
     all_y = []
-    relation_set = {'resistance or non-response':0, 'sensitivity':0, 'response':0, 'resistance':0, 'None':1, }
+    if options.class_num == 2:
+        relation_set = {'resistance or non-response':0, 'sensitivity':0, 'response':0, 'resistance':0, 'None':1, }
+    elif options.class_num == 5:
+        relation_set = {'resistance or non-response':0, 'sensitivity':1, 'response':2, 'resistance':3, 'None':4, }
+    else:
+        assert False, 'Illegal class num'
     with codecs.open(inpath, 'rU', 'utf-8') as f:
         for inst in json.load(f):
             words = []
             lemmas = []
             poses = []
+            if options.only_single_sent and len(inst['sentences']) > 1:
+                continue
             for sentence in inst['sentences']:
                 for node in sentence['nodes']:
                     words.append(node['label'])
@@ -70,16 +77,16 @@ def read_nary_file(inpath, word_format, is_rev):
             assert len(entity_indices) == 3
             all_entity_indices.append(entity_indices)
             all_y.append(relation_set[inst['relationLabel'].strip()])
-    all_lex = all_lemmas if word_format == 'lemma' else all_words
+    all_lex = all_lemmas if options.word_format == 'lemma' else all_words
     return zip(all_lex, all_poses, all_in_neigh, all_in_neigh_hidden, all_in_label, all_entity_indices, all_y)
 
 
-def read_nary_from_fof(fofpath, word_format, is_rev):
+def read_nary_from_fof(fofpath, options, is_rev):
     all_paths = read_text_file(fofpath)
     all_instances = []
     for cur_path in all_paths:
         print(cur_path)
-        cur_instances = read_nary_file(cur_path, word_format, is_rev)
+        cur_instances = read_nary_file(cur_path, options, is_rev)
         all_instances.extend(cur_instances)
     return all_instances
 

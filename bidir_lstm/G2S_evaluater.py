@@ -4,6 +4,7 @@ import argparse
 import re
 import os
 import sys
+import json
 import time
 import numpy as np
 
@@ -24,11 +25,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_prefix', type=str, required=True, help='Prefix to the models.')
     parser.add_argument('--in_path', type=str, required=True, help='The path to the test file.')
+    parser.add_argument('--out_path', type=str, required=True, help='The path to the test file.')
 
     args, unparsed = parser.parse_known_args()
 
     model_prefix = args.model_prefix
     in_path = args.in_path
+    out_path = args.out_path
 
     print("CUDA_VISIBLE_DEVICES " + os.environ['CUDA_VISIBLE_DEVICES'])
 
@@ -50,15 +53,21 @@ if __name__ == '__main__':
 
     print('Loading test set from {}.'.format(in_path))
     if FLAGS.infile_format == 'fof':
-        testset, _, _, _, _ = G2S_data_stream.read_nary_from_fof(in_path, FLAGS.word_format)
+        testset = G2S_data_stream.read_nary_from_fof(in_path, FLAGS, is_rev=False)
+        testset_rev = G2S_data_stream.read_nary_from_fof(in_path, FLAGS, is_rev=True)
     else:
-        testset, _, _, _, _ = G2S_data_stream.read_nary_file(in_path, FLAGS.word_format)
+        testset = G2S_data_stream.read_nary_file(in_path, FLAGS, is_rev=False)
+        testset_rev = G2S_data_stream.read_nary_file(in_path, FLAGS, is_rev=True)
     print('Number of samples: {}'.format(len(testset)))
 
     print('Build DataStream ... ')
     batch_size=-1
     devDataStream = G2S_data_stream.G2SDataStream(testset, word_vocab, char_vocab, edgelabel_vocab, options=FLAGS,
-                 isShuffle=False, isLoop=False, isSort=True, batch_size=batch_size)
+                 isShuffle=False, isLoop=False, isSort=False, batch_size=batch_size)
+    devDataStreamRev = G2S_data_stream.G2SDataStream(testset_rev, word_vocab, char_vocab, edgelabel_vocab, options=FLAGS,
+                 isShuffle=False, isLoop=False, isSort=False, batch_size=batch_size)
+    assert devDataStream.num_instances == devDataStreamRev.num_instances
+    assert devDataStream.num_batch == devDataStreamRev.num_batch
     print('Number of instances in testDataStream: {}'.format(devDataStream.get_num_instance()))
     print('Number of batches in testDataStream: {}'.format(devDataStream.get_num_batch()))
 
@@ -85,17 +94,31 @@ if __name__ == '__main__':
         saver.restore(sess, best_path) # restore the model
 
         devDataStream.reset()
-        gen = []
-        ref = []
+        instances = []
+        instances_rev = []
+        outputs = []
         test_loss = 0.0
         test_right = 0.0
         test_total = 0.0
+        start_time = time.time()
         for batch_index in xrange(devDataStream.get_num_batch()): # for each batch
             cur_batch = devDataStream.get_batch(batch_index)
-            accu_value, loss_value = valid_graph.execute(sess, cur_batch, FLAGS, is_train=False)
+            cur_batch_rev = devDataStreamRev.get_batch(batch_index)
+            assert cur_batch.batch_size == cur_batch_rev.batch_size
+            assert np.array_equal(cur_batch.node_num, cur_batch_rev.node_num)
+            assert np.array_equal(cur_batch.y, cur_batch_rev.y)
+            accu_value, loss_value, output_value = valid_graph.execute(sess, cur_batch, cur_batch_rev, FLAGS, is_train=False)
+            instances += cur_batch.instances
+            instances_rev += cur_batch_rev.instances
+            outputs += output_value.flatten().tolist()
             test_loss += loss_value
             test_right += accu_value
             test_total += cur_batch.batch_size
+        duration = time.time() - start_time
+        print('Decoding time %.3f sec' % (duration))
+
+        assert len(instances) == len(instances_rev) and len(instances) == len(outputs)
+        json.dump((instances,instances_rev,outputs,testset,testset_rev), open(out_path,'w'))
 
         print('Test accu {}, right {}, total {}'.format(1.0*test_right/test_total, test_right, test_total))
 

@@ -5,8 +5,9 @@ def collect_by_indices(memory, indices): # [batch, node_num, dim], [batch, 3, 5]
     batch_size = tf.shape(indices)[0]
     entity_num = tf.shape(indices)[1]
     entity_size = tf.shape(indices)[2]
-    idxs = tf.range(0, limit=batch_size) # [batch,]
-    idxs = tf.reshape(tf.tile(idxs, [entity_num*entity_size]), [batch_size, entity_num, entity_size,]) # [batch, 3, 5]
+    idxs = tf.range(0, limit=batch_size) # [batch]
+    idxs = tf.reshape(idxs, [-1, 1, 1]) # [batch, 1, 1]
+    idxs = tf.tile(idxs, [1, entity_num, entity_size])
     indices = tf.maximum(indices, tf.zeros_like(indices, dtype=tf.int32))
     indices = tf.stack((idxs,indices), axis=3) # [batch,3,5,2]
     return tf.gather_nd(memory, indices)
