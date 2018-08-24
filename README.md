@@ -2,7 +2,7 @@
 
 ## Bidir DAG LSTM
 
-Our implementation of [Peng et al., (2017)](https://www.cs.jhu.edu/~npeng/papers/TACL_17_RelationExtraction.pdf), but with main difference in how to utilize edge labels.
+Our implementation of [Peng et al., (2017)](https://www.cs.jhu.edu/~npeng/papers/TACL_17_RelationExtraction.pdf), but with a main difference on how to utilize the edge labels.
 
 ## GRN
 
