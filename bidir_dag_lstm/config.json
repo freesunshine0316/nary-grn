@@ -30,11 +30,11 @@
     "char_lstm_dim": 50,
     "max_char_per_word": 20,
     
-    "node_dim": 100,
     "edgelabel_dim": 50,
     "neighbor_vector_dim": 100,
     "fix_word_vec": true,
     "compress_input": true,
+    "compress_input_dim": 100,
 
     "config_path": "config.json",
     "generate_config": false
