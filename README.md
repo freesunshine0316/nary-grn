@@ -22,3 +22,6 @@ You may need to modify both scripts before executing. The hyperparameters and ot
 
 We used 5-fold cross validation to conduct our experiment. If your dataset has a training/dev/test separation, just ignore the words below.
 To make things a little bit easier, we use file-of-file, where the first-level files store the locations of the data. One example is "train_list_0" and "test_list_0" in [./gs_lstm/data](./gs_lstm/data), where each line points to a file address. Our data has been segmented into 5 folds by Peng et al., thus we simply follow it.
+You need to modify both "train_list_0" and "test_list_0" and make the rest, such as "train_list_1" and "test_list_1"
+
+Other scripts within [./gs_lstm/data](./gs_lstm/data) is for extracting pretrained word embeddings. We use Glove-100d pretrained embeddings. 
