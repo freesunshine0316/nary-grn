@@ -28,6 +28,10 @@ Other scripts within [./gs_lstm/data](./gs_lstm/data) is for extracting pretrain
 
 For more questions, please create a issue and I'll handle it as soon as possible.
 
+## Data
+
+We put the data by Peng et al., (2017) inside [this repository](./peng_data) for easy access for others.
+
 ## Cite
 
 Please cite this bib:
