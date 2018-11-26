@@ -25,3 +25,17 @@ To make things a little bit easier, we use file-of-file, where the first-level f
 You need to modify both "train_list_0" and "test_list_0" and make the rest, such as "train_list_1" and "test_list_1"
 
 Other scripts within [./gs_lstm/data](./gs_lstm/data) is for extracting pretrained word embeddings. We use Glove-100d pretrained embeddings. 
+
+For more questions, please create a issue and I'll handle it as soon as possible.
+
+## Cite
+
+Please cite this bib:
+```
+@article{song2018n,
+  title={N-ary relation extraction using graph state LSTM},
+  author={Song, Linfeng and Zhang, Yue and Wang, Zhiguo and Gildea, Daniel},
+  journal={arXiv preprint arXiv:1808.09101},
+  year={2018}
+}
+'''
