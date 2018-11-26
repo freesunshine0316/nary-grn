@@ -1,9 +1,8 @@
 {
-    "train_path": "data/train_list_4",
-    "test_path": "data/dev_list_4",
-    "output_path": "logs/result_c_m_4.json",
+    "train_path": "data/train_list_0",
+    "output_path": "logs/result_c_m_0.json",
     "word_vec_path": "data/vocab_morph.wordvec.st",
-    "suffix": "cross_mul_4",
+    "suffix": "cross_mul_0",
     "model_dir": "logs",
     "isLower": true,
     
@@ -33,11 +32,11 @@
     "max_char_per_word": 20,
     
     "attention_type": "hidden_embed",
-    "node_dim": 100,
     "edgelabel_dim": 3,
     "neighbor_vector_dim": 150,
     "fix_word_vec": true,
     "compress_input": true,
+    "compress_input_dim": 100,
 
     "config_path": "config.json",
     "generate_config": false

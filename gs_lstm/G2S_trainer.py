@@ -7,6 +7,7 @@ import time
 import numpy as np
 import codecs
 import json
+import random
 
 from vocab_utils import Vocab
 import namespace_utils
@@ -97,14 +98,13 @@ def main(_):
         trainset, trn_node, trn_in_neigh, trn_out_neigh, trn_sent = G2S_data_stream.read_nary_from_fof(FLAGS.train_path, FLAGS)
     else:
         trainset, trn_node, trn_in_neigh, trn_out_neigh, trn_sent = G2S_data_stream.read_nary_file(FLAGS.train_path, FLAGS)
-    print('Number of training samples: {}'.format(len(trainset)))
 
-    print('Loading dev set.')
-    if FLAGS.infile_format == 'fof':
-        testset, tst_node, tst_in_neigh, tst_out_neigh, tst_sent = G2S_data_stream.read_nary_from_fof(FLAGS.test_path, FLAGS)
-    else:
-        testset, tst_node, tst_in_neigh, tst_out_neigh, tst_sent = G2S_data_stream.read_nary_file(FLAGS.test_path, FLAGS)
-    print('Number of test samples: {}'.format(len(testset)))
+    random.shuffle(trainset)
+    devset = trainset[:200]
+    trainset = trainset[200:]
+
+    print('Number of training samples: {}'.format(len(trainset)))
+    print('Number of dev samples: {}'.format(len(devset)))
 
     max_node = max(trn_node, tst_node)
     max_in_neigh = max(trn_in_neigh, tst_in_neigh)
@@ -152,7 +152,7 @@ def main(_):
     trainDataStream = G2S_data_stream.G2SDataStream(trainset, word_vocab, char_vocab, edgelabel_vocab, options=FLAGS,
                  isShuffle=True, isLoop=True, isSort=False)
 
-    devDataStream = G2S_data_stream.G2SDataStream(testset, word_vocab, char_vocab, edgelabel_vocab, options=FLAGS,
+    devDataStream = G2S_data_stream.G2SDataStream(devset, word_vocab, char_vocab, edgelabel_vocab, options=FLAGS,
                  isShuffle=False, isLoop=False, isSort=False)
     print('Number of instances in trainDataStream: {}'.format(trainDataStream.get_num_instance()))
     print('Number of instances in devDataStream: {}'.format(devDataStream.get_num_instance()))

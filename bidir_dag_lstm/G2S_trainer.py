@@ -99,21 +99,20 @@ def main(_):
 
     print('Loading train set.')
     if FLAGS.infile_format == 'fof':
-        trainset = G2S_data_stream.read_nary_from_fof(FLAGS.train_path, FLAGS, is_rev=False)
-        trainset_rev = G2S_data_stream.read_nary_from_fof(FLAGS.train_path, FLAGS, is_rev=True)
+        fullset = G2S_data_stream.read_nary_from_fof(FLAGS.train_path, FLAGS, is_rev=False)
+        fullset_rev = G2S_data_stream.read_nary_from_fof(FLAGS.train_path, FLAGS, is_rev=True)
     else:
-        trainset = G2S_data_stream.read_nary_file(FLAGS.train_path, FLAGS, is_rev=False)
-        trainset_rev = G2S_data_stream.read_nary_file(FLAGS.train_path, FLAGS, is_rev=True)
-    print('Number of training samples: {}/{}'.format(len(trainset),len(trainset_rev)))
+        fullset = G2S_data_stream.read_nary_file(FLAGS.train_path, FLAGS, is_rev=False)
+        fullset_rev = G2S_data_stream.read_nary_file(FLAGS.train_path, FLAGS, is_rev=True)
 
-    print('Loading dev set.')
-    if FLAGS.infile_format == 'fof':
-        testset = G2S_data_stream.read_nary_from_fof(FLAGS.test_path, FLAGS, is_rev=False)
-        testset_rev = G2S_data_stream.read_nary_from_fof(FLAGS.test_path, FLAGS, is_rev=True)
-    else:
-        testset = G2S_data_stream.read_nary_file(FLAGS.test_path, FLAGS, is_rev=False)
-        testset_rev = G2S_data_stream.read_nary_file(FLAGS.test_path, FLAGS, is_rev=True)
-    print('Number of test samples: {}/{}'.format(len(testset),len(testset_rev)))
+    ids = range(len(fullset))
+    random.shuffle(ids)
+    devset = [fullset[x] for x in ids[:200]]
+    devset_rev = [fullset_rev[x] for x in ids[:200]]
+    trainset = [fullset[x] for x in ids[200:]]
+    trainset_rev = [fullset_rev[x] for x in ids[200:]]
+    print('Number of training samples: {}/{}'.format(len(trainset),len(trainset_rev)))
+    print('Number of dev samples: {}/{}'.format(len(devset),len(devset_rev)))
 
     word_vocab = None
     char_vocab = None
@@ -160,9 +159,9 @@ def main(_):
     assert trainDataStream.num_instances == trainDataStreamRev.num_instances
     assert trainDataStream.num_batch == trainDataStreamRev.num_batch
 
-    devDataStream = G2S_data_stream.G2SDataStream(testset, word_vocab, char_vocab, edgelabel_vocab, options=FLAGS,
+    devDataStream = G2S_data_stream.G2SDataStream(devset, word_vocab, char_vocab, edgelabel_vocab, options=FLAGS,
                  isShuffle=False, isLoop=False, isSort=False)
-    devDataStreamRev = G2S_data_stream.G2SDataStream(testset_rev, word_vocab, char_vocab, edgelabel_vocab, options=FLAGS,
+    devDataStreamRev = G2S_data_stream.G2SDataStream(devset_rev, word_vocab, char_vocab, edgelabel_vocab, options=FLAGS,
                  isShuffle=False, isLoop=False, isSort=False)
     assert devDataStream.num_instances == devDataStreamRev.num_instances
     assert devDataStream.num_batch == devDataStreamRev.num_batch
