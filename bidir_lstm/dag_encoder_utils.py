@@ -119,89 +119,90 @@ class GraphEncoder(object):
         passage_node_representation = passage_node_representation * tf.expand_dims(self.passage_nodes_mask, axis=-1)
 
         if options.compress_input: # compress input word vector into smaller vectors
-            w_compress = tf.get_variable("w_compress_input", [input_dim, options.node_dim], dtype=tf.float32)
-            b_compress = tf.get_variable("b_compress_input", [options.node_dim], dtype=tf.float32)
+            w_compress = tf.get_variable("w_compress_input", [input_dim, options.compress_input_dim], dtype=tf.float32)
+            b_compress = tf.get_variable("b_compress_input", [options.compress_input_dim], dtype=tf.float32)
 
             passage_node_representation = tf.reshape(passage_node_representation, [-1, input_dim])
             passage_node_representation = tf.matmul(passage_node_representation, w_compress) + b_compress
             passage_node_representation = tf.tanh(passage_node_representation)
             passage_node_representation = tf.reshape(passage_node_representation, \
-                    [batch_size, passage_nodes_size_max, options.node_dim])
-        else:
-            assert False
+                    [batch_size, passage_nodes_size_max, options.compress_input_dim])
+            input_dim = options.compress_input_dim
+
 
         if is_training:
             passage_node_representation = tf.nn.dropout(passage_node_representation, (1 - options.dropout_rate))
-        else:
-            passage_node_representation = tf.multiply(passage_node_representation, (1 - options.dropout_rate))
 
 
         # ======Highway layer======
         if options.with_highway:
             with tf.variable_scope("input_highway"):
-                passage_node_representation = match_utils.multi_highway_layer(passage_node_representation, options.node_dim,
-                                                                              options.highway_layer_num)
+                passage_node_representation = match_utils.multi_highway_layer(passage_node_representation,
+                        input_dim, options.highway_layer_num)
 
         # =========== in neighbor
+        # [batch_size, passage_len, passage_neighbors_size_max, edge_dim]
         passage_in_neighbor_edge_representations = tf.nn.embedding_lookup(self.edge_embedding,
                 self.passage_in_neighbor_edges)
-        # [batch_size, passage_len, passage_neighbors_size_max, edge_dim]
-        passage_in_neighbor_node_representations = collect_neighbor_node_representations(
-                                                passage_node_representation, self.passage_in_neighbor_indices)
         # [batch_size, passage_len, passage_neighbors_size_max, node_dim]
+        passage_in_neighbor_node_representations = collect_neighbor_node_representations(
+                passage_node_representation, self.passage_in_neighbor_indices)
 
         passage_in_neighbor_representations = tf.concat( \
                 [passage_in_neighbor_node_representations, passage_in_neighbor_edge_representations], 3)
         passage_in_neighbor_representations = tf.multiply(passage_in_neighbor_representations,
                 tf.expand_dims(self.passage_in_neighbor_mask, axis=-1))
-        passage_in_neighbor_representations = tf.reduce_sum(passage_in_neighbor_representations, axis=2)
         # [batch_size, passage_len, node_dim + edge_dim]
+        passage_in_neighbor_representations = tf.reduce_sum(passage_in_neighbor_representations, axis=2)
 
 
-        # =====compress neighbor_representations
-        compress_vector_dim = options.neighbor_vector_dim
-        w_compress = tf.get_variable("w_compress", [options.node_dim+ edge_dim, compress_vector_dim], dtype=tf.float32)
-        b_compress = tf.get_variable("b_compress", [compress_vector_dim], dtype=tf.float32)
+        # =====transform neighbor_representations
+        w_trans = tf.get_variable("w_trans", [input_dim + edge_dim, options.dag_hidden_dim], dtype=tf.float32)
+        b_trans = tf.get_variable("b_trans", [options.dag_hidden_dim], dtype=tf.float32)
 
         passage_in_neighbor_representations = tf.reshape(passage_in_neighbor_representations,
-                [-1, options.node_dim + edge_dim])
-        passage_in_neighbor_representations = tf.matmul(passage_in_neighbor_representations, w_compress) \
-                + b_compress
+                [-1, input_dim + edge_dim])
+        passage_in_neighbor_representations = tf.matmul(passage_in_neighbor_representations,
+                w_trans) + b_trans
         passage_in_neighbor_representations = tf.tanh(passage_in_neighbor_representations)
 
         passage_in_neighbor_representations = tf.reshape(passage_in_neighbor_representations,
-                [batch_size, passage_nodes_size_max, compress_vector_dim])
+                [batch_size, passage_nodes_size_max, options.dag_hidden_dim])
         passage_in_neighbor_representations = tf.multiply(passage_in_neighbor_representations,
                 tf.expand_dims(self.passage_nodes_mask, axis=-1))
 
         with tf.variable_scope('gated_operations'):
             w_in_ingate = tf.get_variable("w_in_ingate",
-                    [compress_vector_dim, options.neighbor_vector_dim], dtype=tf.float32)
+                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
             u_in_ingate = tf.get_variable("u_in_ingate",
-                    [options.neighbor_vector_dim, options.neighbor_vector_dim], dtype=tf.float32)
-            b_ingate = tf.get_variable("b_in_ingate", [options.neighbor_vector_dim], dtype=tf.float32)
+                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+            b_ingate = tf.get_variable("b_in_ingate",
+                    [options.dag_hidden_dim], dtype=tf.float32)
 
             w_in_forgetgate = tf.get_variable("w_in_forgetgate",
-                    [compress_vector_dim, options.neighbor_vector_dim], dtype=tf.float32)
+                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
             u_in_forgetgate = tf.get_variable("u_in_forgetgate",
-                    [options.neighbor_vector_dim, options.neighbor_vector_dim], dtype=tf.float32)
+                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
             b_forgetgate = tf.get_variable("b_in_forgetgate",
-                    [options.neighbor_vector_dim], dtype=tf.float32)
+                    [options.dag_hidden_dim], dtype=tf.float32)
 
             w_in_outgate = tf.get_variable("w_in_outgate",
-                    [compress_vector_dim, options.neighbor_vector_dim], dtype=tf.float32)
+                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
             u_in_outgate = tf.get_variable("u_in_outgate",
-                    [options.neighbor_vector_dim, options.neighbor_vector_dim], dtype=tf.float32)
+                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
             b_outgate = tf.get_variable("b_in_outgate",
-                    [options.neighbor_vector_dim], dtype=tf.float32)
+                    [options.dag_hidden_dim], dtype=tf.float32)
 
-            w_in_cell = tf.get_variable("w_in_cell", [compress_vector_dim, options.neighbor_vector_dim], dtype=tf.float32)
-            u_in_cell = tf.get_variable("u_in_cell", [options.neighbor_vector_dim, options.neighbor_vector_dim], dtype=tf.float32)
-            b_cell = tf.get_variable("b_in_cell", [options.neighbor_vector_dim], dtype=tf.float32)
+            w_in_cell = tf.get_variable("w_in_cell",
+                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+            u_in_cell = tf.get_variable("u_in_cell",
+                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+            b_cell = tf.get_variable("b_in_cell",
+                    [options.dag_hidden_dim], dtype=tf.float32)
 
             # assume each node has a neighbor vector, and it is None at the beginning
-            passage_node_hidden = tf.zeros([batch_size, 1, options.neighbor_vector_dim])
-            passage_node_cell = tf.zeros([batch_size, 1, options.neighbor_vector_dim])
+            passage_node_hidden = tf.zeros([batch_size, 1, options.dag_hidden_dim])
+            passage_node_cell = tf.zeros([batch_size, 1, options.dag_hidden_dim])
 
             idx_var=tf.constant(0) #tf.Variable(0,trainable=False)
 
@@ -216,17 +217,17 @@ class GraphEncoder(object):
                 # [batch_size, input_dim]
                 prev_input = tf.gather(passage_in_neighbor_representations, idx_var, axis=1)
 
-                # [batch_size, neighbor_size, neighbor_vector_dim]
+                # [batch_size, neighbor_size, dag_hidden_dim]
                 prev_hidden = collect_neighbor_node_representations_2D(passage_node_hidden, prev_idx)
                 prev_hidden = tf.multiply(prev_hidden, tf.expand_dims(prev_mask, axis=-1))
-                # [batch_size, neighbor_vector_dim]
+                # [batch_size, dag_hidden_dim]
                 prev_hidden = tf.reduce_sum(prev_hidden, axis=1)
                 prev_hidden = tf.multiply(prev_hidden, tf.expand_dims(node_mask, axis=-1))
 
-                # [batch_size, neighbor_size, neighbor_vector_dim]
+                # [batch_size, neighbor_size, dag_hidden_dim]
                 prev_cell = collect_neighbor_node_representations_2D(passage_node_cell, prev_idx)
                 prev_cell = tf.multiply(prev_cell, tf.expand_dims(prev_mask, axis=-1))
-                # [batch_size, neighbor_vector_dim]
+                # [batch_size, dag_hidden_dim]
                 prev_cell = tf.reduce_sum(prev_cell, axis=1)
                 prev_cell = tf.multiply(prev_cell, tf.expand_dims(node_mask, axis=-1))
 
@@ -254,7 +255,7 @@ class GraphEncoder(object):
                 # node mask
                 passage_edge_cell = tf.multiply(passage_edge_cell, tf.expand_dims(node_mask, axis=-1))
                 passage_edge_hidden = tf.multiply(passage_edge_hidden, tf.expand_dims(node_mask, axis=-1))
-                # [batch_size, 1, neighbor_vector_dim]
+                # [batch_size, 1, dag_hidden_dim]
                 passage_edge_cell = tf.expand_dims(passage_edge_cell, axis=1)
                 passage_edge_hidden = tf.expand_dims(passage_edge_hidden, axis=1)
                 # concatenating new staff
@@ -269,8 +270,8 @@ class GraphEncoder(object):
             passage_node_hidden, passage_node_cell, idx_var = tf.while_loop(loop_condition,
                     _recurrence, loop_vars, parallel_iterations=1,
                     shape_invariants=[
-                        tf.TensorShape([None, None, options.neighbor_vector_dim]),
-                        tf.TensorShape([None, None, options.neighbor_vector_dim]),
+                        tf.TensorShape([None, None, options.dag_hidden_dim]),
+                        tf.TensorShape([None, None, options.dag_hidden_dim]),
                         idx_var.get_shape(),])
 
             # decide how to use graph_representations

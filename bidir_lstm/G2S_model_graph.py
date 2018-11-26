@@ -1,5 +1,5 @@
 import tensorflow as tf
-import graph_encoder_utils
+import dag_encoder_utils
 import entity_utils
 import padding_utils
 from tensorflow.python.ops import variable_scope
@@ -48,14 +48,14 @@ class ModelGraph(object):
         # encoder.graph_hidden [batch, node_num, vsize]
         # encoder.graph_cell [batch, node_num, vsize]
         with tf.variable_scope('encoder'):
-            self.encoder = graph_encoder_utils.GraphEncoder(
+            self.encoder = dag_encoder_utils.GraphEncoder(
                     word_vocab = word_vocab,
                     edge_label_vocab = Edgelabel_vocab,
                     char_vocab = char_vocab,
                     is_training = is_training, options = options)
 
         with tf.variable_scope('rev_encoder'):
-            self.encoder_rev = graph_encoder_utils.GraphEncoder(
+            self.encoder_rev = dag_encoder_utils.GraphEncoder(
                     word_vocab = word_vocab,
                     edge_label_vocab = Edgelabel_vocab,
                     char_vocab = char_vocab,

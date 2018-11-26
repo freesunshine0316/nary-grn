@@ -4,7 +4,6 @@ import codecs
 import numpy as np
 import random
 import padding_utils
-import amr_utils
 
 def read_text_file(text_file):
     lines = []
