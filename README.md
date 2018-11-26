@@ -13,10 +13,12 @@ Our DAG LSTM is implemented based on tf.while_loop, thus it is highly effecient 
 
 ### GS LSTM (GRN)
 
-Our graph state lstm model
+Our graph-state LSTM model.
 
 ## How to run
 
 Simply goes to the corresponding directory, and execute train.sh or decode.sh for training and evaluation, respectively. 
-You may need to modify both scripts before executing.
-In our experiment, we use
+You may need to modify both scripts before executing. The hyperparameters and other settings are in config.json.
+
+We used 5-fold cross validation to conduct our experiment. If your dataset has a training/dev/test separation, just ignore the words below.
+To make things a little bit easier, we use file-of-file, where the first-level files store the locations of the data. One example is "train_list_0" and "test_list_0" in [./gs_lstm/data](./gs_lstm/data), where each line points to a file address. Our data has been segmented into 5 folds by Peng et al., thus we simply follow it.
