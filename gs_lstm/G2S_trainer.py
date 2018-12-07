@@ -106,10 +106,10 @@ def main(_):
     print('Number of training samples: {}'.format(len(trainset)))
     print('Number of dev samples: {}'.format(len(devset)))
 
-    max_node = max(trn_node, tst_node)
-    max_in_neigh = max(trn_in_neigh, tst_in_neigh)
-    max_out_neigh = max(trn_out_neigh, tst_out_neigh)
-    max_sent = max(trn_sent, tst_sent)
+    max_node = trn_node
+    max_in_neigh = trn_in_neigh
+    max_out_neigh = trn_out_neigh
+    max_sent = trn_sent
     print('Max node number: {}, while max allowed is {}'.format(max_node, FLAGS.max_node_num))
     print('Max parent number: {}, truncated to {}'.format(max_in_neigh, FLAGS.max_in_neigh_num))
     print('Max children number: {}, truncated to {}'.format(max_out_neigh, FLAGS.max_out_neigh_num))
