@@ -1,7 +1,7 @@
 {
     "train_path": "data/train_list_0",
     "word_vec_path": "data/vocab_morph.wordvec.st",
-    "suffix": "cross_mul_0",
+    "suffix": "cross_bin_0",
     "model_dir": "logs",
     "isLower": true,
     
