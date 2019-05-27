@@ -1,12 +1,11 @@
 {
     "train_path": "data/train_list_0",
-    "output_path": "logs/result_c_m_0.json",
+    "output_path": "logs/result_c_b_0.json",
     "word_vec_path": "data/vocab_morph.wordvec.st",
     "suffix": "cross_mul_0",
     "model_dir": "logs",
     "isLower": true,
     
-    "word_format": "morph",
     "class_num": 2,
     "only_single_sent": false,
 
