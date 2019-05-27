@@ -6,7 +6,7 @@
     "isLower": true,
     
     "word_format": "morph",
-    "class_num": 5,
+    "class_num": 2,
     "only_single_sent": false,
 
     "batch_size": 8,
