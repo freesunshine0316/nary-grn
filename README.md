@@ -16,7 +16,30 @@ For binary setting, we follow Peng et al., (2017) to group the first four relati
 More details can be found [here](https://github.com/freesunshine0316/nary-grn/blob/master/gs_lstm/G2S_data_stream.py#L26)
 
 Note that this is somehow confusing, as we also have two datasets: "binary" and "ternary".
-But this option has nothing to do with dataset chossing.
+But this option has nothing to do with dataset selection.
+
+### train_path
+
+This option actually controls dataset selection.
+It points to a "fof" (file of file), a file containing the paths of all associated files.
+One example "fof" (train_list_0) can be:
+```
+/path-to-peng-data/drug_gene_var/1/data_graph_1
+/path-to-peng-data/drug_gene_var/1/data_graph_2
+/path-to-peng-data/drug_gene_var/2/data_graph_1
+/path-to-peng-data/drug_gene_var/2/data_graph_2
+/path-to-peng-data/drug_gene_var/3/data_graph_1
+/path-to-peng-data/drug_gene_var/3/data_graph_2
+/path-to-peng-data/drug_gene_var/4/data_graph_1
+/path-to-peng-data/drug_gene_var/4/data_graph_2
+```
+and correspondingly, the test "fof" (test_list_0) can be:
+```
+/path-to-peng-data/drug_gene_var/0/data_graph_1
+/path-to-peng-data/drug_gene_var/0/data_graph_2
+```
+
+We do 5-fold cross validation, so there should be 5 training "fof"s and 5 testing "fof"s, respectively.
 
 ### only_single_sent
 
