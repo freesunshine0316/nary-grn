@@ -4,6 +4,25 @@ This repository corresponds to code for "[N-ary Relation Extraction using Graph 
 
 Subdirectories "bidir_dag_lstm" and "gs_lstm" contains our bidrectional DAG LSTM baseline and graph state LSTM (we recently rename it as graph recurrent network, GRN), respectively. 
 
+## Important config options
+
+There are several key options in our config file:
+
+### class_num
+
+The value can be either 5, which corresponds to the normal binary classification setting (Table 3 and 5 in our paper), or the multi-label classification setting (Table 6 in our paper).
+The original relation set has 5 relations: 'resistance or non-response', 'sensitivity', 'response', 'resistance', 'None'.
+For binary setting, we follow Peng et al., (2017) to group the first four relations into one relation.
+More details can be found [here](https://github.com/freesunshine0316/nary-grn/blob/master/gs_lstm/G2S_data_stream.py#L26)
+
+Note that this is somehow confusing, as we also have two datasets: "binary" and "ternary".
+But this option has nothing to do with dataset chossing.
+
+### only_single_sent
+
+This is a bool flag (true or false) for controling whether to take only the single-sentence instances.
+Setting it to true corresponds to the results of column "Single" in Table 3 and 5 of our paper, otherwise that corresponds to the results of column "Cross".
+
 ## Important directories
 
 ### Bidir DAG LSTM
