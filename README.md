@@ -78,10 +78,11 @@ We put the data by Peng et al., (2017) inside [this repository](./peng_data) for
 
 Please cite this bib:
 ```
-@article{song2018n,
-  title={N-ary relation extraction using graph state LSTM},
+@inproceedings{song2018n,
+  title={N-ary Relation Extraction using Graph-State LSTM},
   author={Song, Linfeng and Zhang, Yue and Wang, Zhiguo and Gildea, Daniel},
-  journal={arXiv preprint arXiv:1808.09101},
+  booktitle={Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing},
+  pages={2226--2235},
   year={2018}
 }
 ```
