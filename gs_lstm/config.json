@@ -4,6 +4,7 @@
     "word_vec_path": "data/vocab_morph.wordvec.st",
     "suffix": "cross_mul_0",
     "model_dir": "logs",
+    "word_format": "lemma",
     "isLower": true,
     
     "class_num": 2,
