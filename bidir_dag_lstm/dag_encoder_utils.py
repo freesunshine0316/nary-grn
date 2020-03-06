@@ -157,8 +157,9 @@ class GraphEncoder(object):
 
 
         # =====transform neighbor_representations
-        w_trans = tf.get_variable("w_trans", [input_dim + edge_dim, options.dag_hidden_dim], dtype=tf.float32)
-        b_trans = tf.get_variable("b_trans", [options.dag_hidden_dim], dtype=tf.float32)
+        dag_hidden_dim = options.neighbor_vector_dim
+        w_trans = tf.get_variable("w_trans", [input_dim + edge_dim, dag_hidden_dim], dtype=tf.float32)
+        b_trans = tf.get_variable("b_trans", [dag_hidden_dim], dtype=tf.float32)
 
         passage_in_neighbor_representations = tf.reshape(passage_in_neighbor_representations,
                 [-1, input_dim + edge_dim])
