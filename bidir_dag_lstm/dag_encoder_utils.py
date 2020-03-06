@@ -168,42 +168,42 @@ class GraphEncoder(object):
         passage_in_neighbor_representations = tf.tanh(passage_in_neighbor_representations)
 
         passage_in_neighbor_representations = tf.reshape(passage_in_neighbor_representations,
-                [batch_size, passage_nodes_size_max, options.dag_hidden_dim])
+                [batch_size, passage_nodes_size_max, dag_hidden_dim])
         passage_in_neighbor_representations = tf.multiply(passage_in_neighbor_representations,
                 tf.expand_dims(self.passage_nodes_mask, axis=-1))
 
         with tf.variable_scope('gated_operations'):
             w_in_ingate = tf.get_variable("w_in_ingate",
-                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim, dag_hidden_dim], dtype=tf.float32)
             u_in_ingate = tf.get_variable("u_in_ingate",
-                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim, dag_hidden_dim], dtype=tf.float32)
             b_ingate = tf.get_variable("b_in_ingate",
-                    [options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim], dtype=tf.float32)
 
             w_in_forgetgate = tf.get_variable("w_in_forgetgate",
-                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim, dag_hidden_dim], dtype=tf.float32)
             u_in_forgetgate = tf.get_variable("u_in_forgetgate",
-                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim, dag_hidden_dim], dtype=tf.float32)
             b_forgetgate = tf.get_variable("b_in_forgetgate",
-                    [options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim], dtype=tf.float32)
 
             w_in_outgate = tf.get_variable("w_in_outgate",
-                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim, dag_hidden_dim], dtype=tf.float32)
             u_in_outgate = tf.get_variable("u_in_outgate",
-                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim, dag_hidden_dim], dtype=tf.float32)
             b_outgate = tf.get_variable("b_in_outgate",
-                    [options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim], dtype=tf.float32)
 
             w_in_cell = tf.get_variable("w_in_cell",
-                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim, dag_hidden_dim], dtype=tf.float32)
             u_in_cell = tf.get_variable("u_in_cell",
-                    [options.dag_hidden_dim, options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim, dag_hidden_dim], dtype=tf.float32)
             b_cell = tf.get_variable("b_in_cell",
-                    [options.dag_hidden_dim], dtype=tf.float32)
+                    [dag_hidden_dim], dtype=tf.float32)
 
             # assume each node has a neighbor vector, and it is None at the beginning
-            passage_node_hidden = tf.zeros([batch_size, 1, options.dag_hidden_dim])
-            passage_node_cell = tf.zeros([batch_size, 1, options.dag_hidden_dim])
+            passage_node_hidden = tf.zeros([batch_size, 1, dag_hidden_dim])
+            passage_node_cell = tf.zeros([batch_size, 1, dag_hidden_dim])
 
             idx_var=tf.constant(0) #tf.Variable(0,trainable=False)
 
@@ -271,8 +271,8 @@ class GraphEncoder(object):
             passage_node_hidden, passage_node_cell, idx_var = tf.while_loop(loop_condition,
                     _recurrence, loop_vars, parallel_iterations=1,
                     shape_invariants=[
-                        tf.TensorShape([None, None, options.dag_hidden_dim]),
-                        tf.TensorShape([None, None, options.dag_hidden_dim]),
+                        tf.TensorShape([None, None, dag_hidden_dim]),
+                        tf.TensorShape([None, None, dag_hidden_dim]),
                         idx_var.get_shape(),])
 
             # decide how to use graph_representations
